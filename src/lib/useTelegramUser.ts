@@ -1,5 +1,9 @@
 export function useTelegramUser() {
   if (typeof window === 'undefined') return null;
-  // @ts-expect-error Нужно для доступа к Telegram WebApp API, нет типов
-  return window?.Telegram?.WebApp?.initDataUnsafe?.user ?? null;
+
+  // Получаем пользователя из Telegram WebApp (если открыт в миниприложении)
+  // @ts-expect-error: потому что TS не знает про Telegram WebApp
+  const user = window?.Telegram?.WebApp?.initDataUnsafe?.user ?? null;
+  
+  return user;
 }

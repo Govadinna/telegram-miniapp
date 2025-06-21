@@ -7,7 +7,9 @@ export type Event = {
   tag1: string;
   tag2: string;
   tag3: string;
+  is_active: boolean; // <- добавь сюда
 };
+
 
 export type User = {
   id: string;

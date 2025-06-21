@@ -1,40 +1,50 @@
 'use client';
 
-import { Event, User } from '@/types';
 import { useEffect, useState } from 'react';
-import { fetchEvents, fetchOrCreateUser } from '@/lib/fetchData';
 import { useTelegramUser } from '@/lib/useTelegramUser';
+import { fetchOrCreateUser, fetchEvents } from '@/lib/fetchData';
+import { Event, User } from '@/types';
 import Image from 'next/image';
 
 export default function Home() {
   const tgUser = useTelegramUser();
-  const [events, setEvents] = useState<Event[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
-    if (!tgUser) return;
-    (async () => {
+  console.log('tgUser:', tgUser);
+  if (!tgUser) return;
+
+  (async () => {
+    try {
       const userData = await fetchOrCreateUser(tgUser);
+      console.log('User data:', userData);
       setUser(userData);
+
       const eventList = await fetchEvents();
-      console.log('Загруженные ивенты:', eventList); // 👈 для отладки
+      console.log('Event list:', eventList);
       setEvents(eventList);
-    })();
-  }, [tgUser]);
+    } catch (error) {
+      console.error('Ошибка авторизации/регистрации:', error);
+    }
+  })();
+}, [tgUser]);
+  
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <div className="flex justify-between items-center px-6 mt-6">
         <h1 className="text-4xl font-extrabold">Главная</h1>
         {user && (
-          <div className="bg-neutral-900 px-4 py-2 rounded-full text-sm font-semibold">
+          <div className="text-white px-4 py-2 rounded-full text-sm font-semibold">
             Баланс: {user.balance}💰
           </div>
         )}
       </div>
 
       <h2 className="text-2xl font-extrabold mt-6 ml-6">Активные ивенты</h2>
-      <div className="flex overflow-x-auto scroll-smooth gap-x-4 mt-4 px-6 pb-4">
+
+      <div className="flex overflow-x-auto scroll-smooth gap-x-4 mt-4 px-6 pb-4 hide-scrollbar">
         {events.map((event) => (
           <div key={event.id} className="flex-shrink-0 w-[385px]">
             <EventCard event={event} />
@@ -48,7 +58,11 @@ export default function Home() {
 function EventCard({ event }: { event: Event }) {
   return (
     <div>
-      <h3 className="mt-2 text-xs ml-0 font-semibold text-blue-500">АКТИВНО</h3>
+      {event.is_active ? (
+        <h3 className="mt-2 text-xs ml-0 font-semibold text-blue-500">АКТИВНО</h3>
+      ) : (
+        <h3 className="mt-2 text-xs ml-0 font-semibold text-red-500">ЗАВЕРШЕНО</h3>
+      )}
 
       <div className="mt-2 aspect-video relative overflow-hidden rounded-t-lg">
         {/* Размытое заднее изображение */}
@@ -64,17 +78,14 @@ function EventCard({ event }: { event: Event }) {
             style={{
               position: 'absolute',
               inset: 0,
-              background:
-                'linear-gradient(to bottom, transparent 0%, black 50%)',
-              WebkitMaskImage:
-                'linear-gradient(to bottom, transparent 0%, black 50%)',
-              maskImage:
-                'linear-gradient(to bottom, transparent 0%, black 50%)',
+              background: 'linear-gradient(to bottom, transparent 0%, black 50%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 50%)',
+              maskImage: 'linear-gradient(to bottom, transparent 0%, black 50%)',
             }}
           />
         </div>
 
-        {/* Основное изображение поверх */}
+        {/* Основное изображение */}
         <div className="absolute inset-0">
           <Image
             src={event.image_url}
