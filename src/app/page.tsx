@@ -1,4 +1,5 @@
 'use client';
+
 import { Event, User } from '@/types';
 import { useEffect, useState } from 'react';
 import { fetchEvents, fetchOrCreateUser } from '@/lib/fetchData';
@@ -10,18 +11,16 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [user, setUser] = useState<User | null>(null);
 
-
   useEffect(() => {
-  if (!tgUser) return;
-  (async () => {
-    const userData = await fetchOrCreateUser(tgUser);
-    setUser(userData);
-    const eventList = await fetchEvents();
-    console.log('Загруженные ивенты:', eventList); // 👈 покажет, пришли ли данные
-    setEvents(eventList);
-  })();
-}, [tgUser]);
-
+    if (!tgUser) return;
+    (async () => {
+      const userData = await fetchOrCreateUser(tgUser);
+      setUser(userData);
+      const eventList = await fetchEvents();
+      console.log('Загруженные ивенты:', eventList); // 👈 для отладки
+      setEvents(eventList);
+    })();
+  }, [tgUser]);
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
@@ -52,26 +51,45 @@ function EventCard({ event }: { event: Event }) {
       <h3 className="mt-2 text-xs ml-0 font-semibold text-blue-500">АКТИВНО</h3>
 
       <div className="mt-2 aspect-video relative overflow-hidden rounded-t-lg">
-        <Image
-          src={event.image_url}
-          alt=""
-          className="w-full h-full object-cover"
-          style={{
-            filter: 'blur(12px)',
-            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 50%)',
-            maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%)',
-          }}
-        />
-        <Image
-          src={event.image_url}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{
-            WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 80%)',
-            maskImage: 'linear-gradient(to bottom, black 30%, transparent 75%)',
-          }}
-        />
-        <div className="absolute left-4 top-1/2">
+        {/* Размытое заднее изображение */}
+        <div className="absolute inset-0 -z-10">
+          <Image
+            src={event.image_url}
+            alt={event.title}
+            fill
+            style={{ objectFit: 'cover', filter: 'blur(12px)' }}
+            sizes="(max-width: 768px) 100vw, 385px"
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'linear-gradient(to bottom, transparent 0%, black 50%)',
+              WebkitMaskImage:
+                'linear-gradient(to bottom, transparent 0%, black 50%)',
+              maskImage:
+                'linear-gradient(to bottom, transparent 0%, black 50%)',
+            }}
+          />
+        </div>
+
+        {/* Основное изображение поверх */}
+        <div className="absolute inset-0">
+          <Image
+            src={event.image_url}
+            alt={event.title}
+            fill
+            style={{
+              objectFit: 'cover',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 80%)',
+              maskImage: 'linear-gradient(to bottom, black 30%, transparent 75%)',
+            }}
+            sizes="(max-width: 768px) 100vw, 385px"
+          />
+        </div>
+
+        <div className="absolute left-4 top-1/2 -translate-y-1/2">
           <h2 className="text-3xl font-extrabold text-white">{event.title}</h2>
         </div>
       </div>
