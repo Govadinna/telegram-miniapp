@@ -3,6 +3,7 @@ import { Event, User } from '@/types';
 import { useEffect, useState } from 'react';
 import { fetchEvents, fetchOrCreateUser } from '@/lib/fetchData';
 import { useTelegramUser } from '@/lib/useTelegramUser';
+import Image from 'next/image';
 
 export default function Home() {
   const tgUser = useTelegramUser();
@@ -45,13 +46,13 @@ export default function Home() {
   );
 }
 
-function EventCard({ event }: any) {
+function EventCard({ event }: { event: Event }) {
   return (
     <div>
       <h3 className="mt-2 text-xs ml-0 font-semibold text-blue-500">АКТИВНО</h3>
 
       <div className="mt-2 aspect-video relative overflow-hidden rounded-t-lg">
-        <img
+        <Image
           src={event.image_url}
           alt=""
           className="w-full h-full object-cover"
@@ -61,7 +62,7 @@ function EventCard({ event }: any) {
             maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%)',
           }}
         />
-        <img
+        <Image
           src={event.image_url}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
