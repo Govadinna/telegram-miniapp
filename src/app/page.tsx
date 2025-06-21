@@ -1,3 +1,4 @@
+// app/page.tsx или pages/index.tsx (если Next.js 13 app or pages)
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,28 +9,32 @@ import Image from 'next/image';
 
 export default function Home() {
   const tgUser = useTelegramUser();
+
   const [user, setUser] = useState<User | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-  console.log('tgUser:', tgUser);
-  if (!tgUser) return;
+    setLoading(true);
+    setError(null);
 
-  (async () => {
-    try {
-      const userData = await fetchOrCreateUser(tgUser);
-      console.log('User data:', userData);
-      setUser(userData);
+    (async () => {
+      try {
+        // Передаем tgUser, или null (будет тестовый)
+        const userData = await fetchOrCreateUser(tgUser);
+        setUser(userData);
 
-      const eventList = await fetchEvents();
-      console.log('Event list:', eventList);
-      setEvents(eventList);
-    } catch (error) {
-      console.error('Ошибка авторизации/регистрации:', error);
-    }
-  })();
-}, [tgUser]);
-  
+        const eventList = await fetchEvents();
+        setEvents(eventList);
+      } catch (e: any) {
+        console.error('Ошибка авторизации/регистрации:', e);
+        setError(e.message || 'Ошибка загрузки данных');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [tgUser]);
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
@@ -44,8 +49,11 @@ export default function Home() {
 
       <h2 className="text-2xl font-extrabold mt-6 ml-6">Активные ивенты</h2>
 
+      {loading && <p className="ml-6 mt-2">Загрузка...</p>}
+      {error && <p className="ml-6 mt-2 text-red-500">Ошибка: {error}</p>}
+
       <div className="flex overflow-x-auto scroll-smooth gap-x-4 mt-4 px-6 pb-4 hide-scrollbar">
-        {events.map((event) => (
+        {events.map(event => (
           <div key={event.id} className="flex-shrink-0 w-[385px]">
             <EventCard event={event} />
           </div>
@@ -58,11 +66,9 @@ export default function Home() {
 function EventCard({ event }: { event: Event }) {
   return (
     <div>
-      {event.is_active ? (
-        <h3 className="mt-2 text-xs ml-0 font-semibold text-blue-500">АКТИВНО</h3>
-      ) : (
-        <h3 className="mt-2 text-xs ml-0 font-semibold text-red-500">ЗАВЕРШЕНО</h3>
-      )}
+      <h3 className={`mt-2 text-xs ml-0 font-semibold ${event.is_active ? 'text-blue-500' : 'text-red-500'}`}>
+        {event.is_active ? 'АКТИВНО' : 'ЗАВЕРШЕНО'}
+      </h3>
 
       <div className="mt-2 aspect-video relative overflow-hidden rounded-t-lg">
         {/* Размытое заднее изображение */}

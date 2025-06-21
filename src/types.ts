@@ -1,3 +1,4 @@
+// types.ts
 export type Event = {
   id: string;
   title: string;
@@ -7,9 +8,8 @@ export type Event = {
   tag1: string;
   tag2: string;
   tag3: string;
-  is_active: boolean; // <- добавь сюда
+  is_active: boolean;
 };
-
 
 export type User = {
   id: string;

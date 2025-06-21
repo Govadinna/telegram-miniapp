@@ -1,3 +1,4 @@
+// lib/fetchData.ts
 import { supabase } from './supabaseClient';
 import type { Event, User } from '@/types';
 
@@ -11,9 +12,21 @@ export async function fetchEvents(): Promise<Event[]> {
   return data as Event[] ?? [];
 }
 
-export async function fetchOrCreateUser(tgUser: { id: number | string; username?: string }) {
-  const telegram_id = tgUser.id.toString();
-  const username = tgUser.username ?? '';
+// tgUser может быть null — если не из Telegram — тогда используем тестового
+export async function fetchOrCreateUser(tgUser: { id: number | string; username?: string } | null) {
+  // Тестовый пользователь, если tgUser нет
+  const TEST_USER = {
+    id: '999999999',
+    username: 'test_user',
+  };
+
+  const userToUse = tgUser ?? TEST_USER;
+
+  // Важно: всегда приводим к строке, чтобы тип совпадал с типом в БД
+  const telegram_id = userToUse.id.toString();
+  const username = userToUse.username ?? '';
+
+  console.log('Ищем пользователя с telegram_id:', telegram_id);
 
   const { data: existingUser, error: fetchError } = await supabase
     .from('users')
@@ -24,7 +37,6 @@ export async function fetchOrCreateUser(tgUser: { id: number | string; username?
   if (fetchError && fetchError.code !== 'PGRST116') {
     throw new Error('Ошибка при поиске пользователя: ' + fetchError.message);
   }
-  console.log('Найденный пользователь:', existingUser);
 
   if (existingUser) return existingUser;
 
@@ -36,6 +48,5 @@ export async function fetchOrCreateUser(tgUser: { id: number | string; username?
 
   if (createError) throw new Error('Ошибка при создании пользователя: ' + createError.message);
 
-  console.log('Создан новый пользователь:', newUser);
   return newUser;
 }
